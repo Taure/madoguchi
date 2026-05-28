@@ -78,7 +78,7 @@ call - it never takes down the server.
 
 - **Standalone:** `madoguchi:start_http/1,2` starts a Cowboy listener serving
   the MCP endpoint.
-- **Inside your app:** mount `madoguchi_cowboy_h` as a route on your own Cowboy
+- **Inside your app:** mount `madoguchi_http_handler` as a route on your own Cowboy
   listener, or call `madoguchi:dispatch/2` from a Nova controller / Plug. The
   [getting-started guide](docs/getting-started.md) shows the Nova pattern.
 
