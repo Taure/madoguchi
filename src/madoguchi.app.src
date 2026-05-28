@@ -1,0 +1,11 @@
+{application, madoguchi, [
+    {description,
+        "MCP server framework for the BEAM - expose Erlang services as Model Context Protocol tools"},
+    {vsn, "git"},
+    {registered, []},
+    {applications, [kernel, stdlib, cowboy]},
+    {env, []},
+    {modules, []},
+    {licenses, ["MIT"]},
+    {links, [{"GitHub", "https://github.com/Taure/madoguchi"}]}
+]}.
