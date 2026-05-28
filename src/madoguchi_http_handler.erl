@@ -1,10 +1,10 @@
--module(madoguchi_cowboy_h).
+-module(madoguchi_http_handler).
 -moduledoc """
-Cowboy handler for the MCP Streamable HTTP transport. Mount it on a route with
-the server definition as the handler state:
+Cowboy request handler for the MCP HTTP transport. Mount it on a route with the
+server definition as the handler state:
 
 ```erlang
-{"/mcp", madoguchi_cowboy_h, Server}
+{"/mcp", madoguchi_http_handler, Server}
 ```
 
 POST reads the JSON-RPC body, calls `madoguchi:dispatch/2`, and replies

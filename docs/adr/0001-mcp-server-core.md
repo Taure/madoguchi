@@ -71,7 +71,7 @@ method name, and always yield `noreply`.
 
 ### The Cowboy transport
 
-`madoguchi_cowboy_h` is a `cowboy_handler`: POST reads the body, calls
+`madoguchi_http_handler` is a `cowboy_handler`: POST reads the body, calls
 `dispatch/2`, and replies `200 application/json` with the response or `202` for
 a notification; other methods get `405`. The server is stateless - no sessions,
 since tools are stateless and there are no subscriptions in v0.1.

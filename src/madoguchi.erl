@@ -59,7 +59,7 @@ start_http(Server, Opts) ->
     Port = maps:get(port, Opts, 8080),
     Path = maps:get(path, Opts, "/mcp"),
     Ref = maps:get(ref, Opts, madoguchi_http),
-    Dispatch = cowboy_router:compile([{'_', [{Path, madoguchi_cowboy_h, Server}]}]),
+    Dispatch = cowboy_router:compile([{'_', [{Path, madoguchi_http_handler, Server}]}]),
     cowboy:start_clear(Ref, [{port, Port}], #{env => #{dispatch => Dispatch}}).
 
 -doc "Stop a listener started by `start_http/1,2`.".
