@@ -69,8 +69,9 @@ find_tool(Name, Tools) when is_binary(Name) ->
 find_tool(_Name, _Tools) ->
     error.
 
-%% v0.1 speaks exactly one revision; advertise it and let a client on a
-%% different revision decide whether to proceed.
+%% v0.1 supports one revision: echo it when the client requests it, otherwise
+%% advertise ours and let the client decide whether to proceed.
+negotiate(#{~"protocolVersion" := ?PROTOCOL}) -> ?PROTOCOL;
 negotiate(_Params) -> ?PROTOCOL.
 
 result(Id, Result) ->
