@@ -6,6 +6,27 @@ expose tools to Model Context Protocol clients (Claude Code, Cursor, gakudan
 agents). A small OTP library: bring-your-own tools, mount the transport in your
 own app.
 
+## Ecosystem
+
+Part of a BEAM-native multi-agent stack (all under https://github.com/Taure):
+
+- **[gakudan](https://github.com/Taure/gakudan)** - agent orchestration
+  runtime; ships the MCP *client*.
+- **[saiten](https://github.com/Taure/saiten)** - runtime-agnostic eval/scoring
+  + CI gate.
+- **madoguchi** - MCP *server* framework: expose any BEAM service as MCP tools.
+- **[sekisho](https://github.com/Taure/sekisho)** - LLM gateway / control plane:
+  virtual keys, cost ledger, budgets, and audit in front of Anthropic / Gemini
+  / Vertex.
+
+Gakudan sister libs: **gakudan_metrics**, **gakudan_otel**, **gakudan_tickets**
+(+ **gakudan_tickets_github**), **gakudan_liveboard**.
+
+**This repo** is the MCP *server* side. With gakudan's MCP client it covers both
+halves of MCP on the BEAM. The core is transport-agnostic (a `cowboy_handler`)
+so any web stack can mount it; a Nova bridge is deferred until a consumer needs
+it.
+
 ## Design pillars
 
 - **Primitives, not a framework.** A `madoguchi_tool` behaviour, a pure
