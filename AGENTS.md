@@ -16,21 +16,24 @@ Part of a BEAM-native multi-agent stack (all under https://github.com/Taure):
   + CI gate.
 - **madoguchi** - MCP *server* framework: expose any BEAM service as MCP tools.
 - **[sekisho](https://github.com/Taure/sekisho)** - LLM gateway / control plane:
-  virtual keys, cost ledger, budgets, and audit in front of Anthropic / Gemini
-  / Vertex.
+  virtual keys, budgets, and audit in front of Anthropic + OpenAI (chat **and
+  embeddings**) + Vertex.
+- **[bunko](https://github.com/Taure/bunko)** - agent memory + RAG (pgvector).
+- **[banto](https://github.com/Taure/banto)** - multi-agent repo concierge; the
+  showcase consumer that wires the pillars together.
 
 Gakudan sister libs: **gakudan_metrics**, **gakudan_otel**, **gakudan_tickets**
 (+ **gakudan_tickets_github**), **gakudan_liveboard**.
 
 **This repo** is the MCP *server* side. With gakudan's MCP client it covers both
-halves of MCP on the BEAM. The core is transport-agnostic (a `cowboy_handler`)
-so any web stack can mount it; a Nova bridge is deferred until a consumer needs
-it.
+halves of MCP on the BEAM. The core is transport-agnostic (the bundled Cowboy
+handler `madoguchi_http_handler`) so any web stack can mount it; a Nova bridge is
+deferred until a consumer needs it.
 
 ## Design pillars
 
 - **Primitives, not a framework.** A `madoguchi_tool` behaviour, a pure
-  JSON-RPC dispatcher, and a Cowboy transport handler.
+  JSON-RPC dispatcher, and a Cowboy transport handler (`madoguchi_http_handler`).
 - **Transport-agnostic core.** `madoguchi_dispatch:handle/2` is a pure function:
   decoded JSON-RPC message in, response out. It needs no HTTP, so it is tested
   by feeding it messages - deterministic, no sockets.
