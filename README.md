@@ -8,9 +8,10 @@
 
 madoguchi turns any BEAM service into a [Model Context Protocol](https://modelcontextprotocol.io)
 server, so agents - Claude Code, Cursor, or a [gakudan](https://github.com/Taure/gakudan)
-agent - can call your tools over the wire. It speaks the Streamable HTTP
-transport, JSON-RPC 2.0, protocol version `2025-06-18` (the same revision
-gakudan's MCP client speaks, so the two interoperate end to end).
+agent - can call your tools over the wire. It serves the Streamable HTTP and
+stdio transports, JSON-RPC 2.0, protocol version `2025-11-25` and negotiates
+`2025-06-18` for older clients (the revision gakudan's MCP client speaks, so the
+two interoperate end to end).
 
 The protocol core is transport-agnostic: `madoguchi:dispatch/2` is a pure
 function from a JSON-RPC message to a response, with no web dependency. A

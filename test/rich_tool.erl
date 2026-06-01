@@ -8,6 +8,7 @@
     input_schema/0,
     output_schema/0,
     annotations/0,
+    icons/0,
     call/1
 ]).
 
@@ -29,6 +30,9 @@ annotations() ->
         idempotentHint => true,
         openWorldHint => false
     }.
+
+icons() ->
+    [#{src => ~"https://example.com/icon.png", mimeType => ~"image/png", sizes => ~"48x48"}].
 
 call(#{~"mode" := ~"image"}) ->
     {ok, [madoguchi_tool:image(~"AAAA", ~"image/png")]};

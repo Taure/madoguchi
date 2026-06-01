@@ -45,22 +45,31 @@ List prompt modules in the server definition under `prompts`:
 -callback arguments() -> [argument()].
 -callback get(Arguments :: map()) ->
     {ok, [message()]} | {ok, binary(), [message()]} | {error, binary()}.
+-callback icons() -> [madoguchi_tool:icon()].
 
--optional_callbacks([arguments/0]).
+-optional_callbacks([arguments/0, icons/0]).
 
 -doc "Build the `prompts/list` entry for a prompt module.".
 -spec to_spec(module()) -> map().
 to_spec(Mod) ->
     Base = #{name => Mod:name(), description => Mod:description()},
-    case prompt_arguments(Mod) of
-        [] -> Base;
-        Args -> Base#{arguments => Args}
-    end.
+    WithArgs =
+        case prompt_arguments(Mod) of
+            [] -> Base;
+            Args -> Base#{arguments => Args}
+        end,
+    maybe_icons(Mod, WithArgs).
 
 prompt_arguments(Mod) ->
     case erlang:function_exported(Mod, arguments, 0) of
         true -> Mod:arguments();
         false -> []
+    end.
+
+maybe_icons(Mod, Spec) ->
+    case erlang:function_exported(Mod, icons, 0) of
+        true -> Spec#{icons => Mod:icons()};
+        false -> Spec
     end.
 
 -doc """

@@ -4,16 +4,18 @@ The pure JSON-RPC dispatcher. `handle/2` takes a decoded MCP message and a
 server definition and returns `{reply, Response}` or `noreply` (for a
 notification). No transport, no sockets - feed it maps and assert the responses.
 
-Implements the `2025-06-18` MCP methods needed for tools: `initialize`, `ping`,
-`tools/list`, `tools/call`, and the `notifications/initialized` notification.
+Targets MCP revision `2025-11-25` and negotiates `2025-06-18` for older clients.
+Methods: `initialize`, `ping`, `tools/list`, `tools/call`, `resources/list`,
+`resources/templates/list`, `resources/read`, `prompts/list`, `prompts/get`, and
+the `notifications/initialized` notification.
 """.
 
 -include_lib("kernel/include/logger.hrl").
 
 -export([handle/2, protocol_version/0, supported_versions/0]).
 
--define(PROTOCOL, ~"2025-06-18").
--define(SUPPORTED, [~"2025-06-18"]).
+-define(PROTOCOL, ~"2025-11-25").
+-define(SUPPORTED, [~"2025-11-25", ~"2025-06-18"]).
 
 -doc "The default (latest) MCP protocol revision this server speaks.".
 -spec protocol_version() -> binary().
@@ -41,7 +43,7 @@ request(~"initialize", Params, Id, Server) ->
     result(Id, #{
         protocolVersion => negotiate(Params),
         capabilities => capabilities(Server),
-        serverInfo => #{name => maps:get(name, Server), version => maps:get(version, Server)}
+        serverInfo => server_info(Server)
     });
 request(~"ping", _Params, Id, _Server) ->
     result(Id, #{});
@@ -65,6 +67,11 @@ request(~"prompts/get", Params, Id, Server) ->
     prompts_get(Params, Id, Server);
 request(_Method, _Params, Id, _Server) ->
     error_response(Id, -32601, ~"Method not found").
+
+server_info(Server) ->
+    Base = #{name => maps:get(name, Server), version => maps:get(version, Server)},
+    Optional = maps:with([title, icons], Server),
+    maps:merge(Base, Optional).
 
 capabilities(Server) ->
     Base = #{tools => #{}},

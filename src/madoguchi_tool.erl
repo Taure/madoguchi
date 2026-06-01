@@ -61,8 +61,13 @@ Content is not limited to text: build blocks with `text/1`, `image/2`,
 -callback title() -> binary().
 -callback annotations() -> annotations().
 -callback output_schema() -> map().
+-callback icons() -> [icon()].
 
--optional_callbacks([title/0, annotations/0, output_schema/0]).
+-optional_callbacks([title/0, annotations/0, output_schema/0, icons/0]).
+
+-type icon() :: #{src := binary(), mimeType => binary(), sizes => binary()}.
+
+-export_type([icon/0]).
 
 -doc "Build the `tools/list` entry for a tool module, including any optional enrichments.".
 -spec to_spec(module()) -> map().
@@ -75,13 +80,14 @@ to_spec(Mod) ->
     enrich(Mod, Base).
 
 enrich(Mod, Spec0) ->
-    Spec1 = maybe_put(title, Mod, title, 0, Spec0, fun(V) -> V end),
-    Spec2 = maybe_put(annotations, Mod, annotations, 0, Spec1, fun(V) -> V end),
-    maybe_put(outputSchema, Mod, output_schema, 0, Spec2, fun(V) -> V end).
+    Spec1 = maybe_put(title, Mod, title, Spec0),
+    Spec2 = maybe_put(annotations, Mod, annotations, Spec1),
+    Spec3 = maybe_put(outputSchema, Mod, output_schema, Spec2),
+    maybe_put(icons, Mod, icons, Spec3).
 
-maybe_put(SpecKey, Mod, Fun, Arity, Spec, Transform) ->
-    case erlang:function_exported(Mod, Fun, Arity) of
-        true -> Spec#{SpecKey => Transform(Mod:Fun())};
+maybe_put(SpecKey, Mod, Fun, Spec) ->
+    case erlang:function_exported(Mod, Fun, 0) of
+        true -> Spec#{SpecKey => Mod:Fun()};
         false -> Spec
     end.
 

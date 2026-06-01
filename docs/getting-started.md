@@ -30,10 +30,14 @@ call(#{~"a" := A, ~"b" := B}) ->
 or a crash becomes an MCP tool error on that call; the server stays up.
 
 A tool can also implement optional `title/0`, `annotations/0` (read-only /
-destructive / idempotent / open-world hints), and `output_schema/0`. Content is
-not limited to text - build image, audio, resource-link, and embedded-resource
-blocks with `madoguchi_tool:image/2`, `audio/2`, `resource_link/2`, and
-`embedded/1`.
+destructive / idempotent / open-world hints), `output_schema/0`, and `icons/0`.
+Content is not limited to text - build image, audio, resource-link, and
+embedded-resource blocks with `madoguchi_tool:image/2`, `audio/2`,
+`resource_link/2`, and `embedded/1`.
+
+`input_schema/0` and `output_schema/0` are JSON Schema objects; the targeted
+protocol revision (`2025-11-25`) assumes the JSON Schema 2020-12 dialect. The
+server negotiates `2025-06-18` automatically for older clients.
 
 ## A server definition
 

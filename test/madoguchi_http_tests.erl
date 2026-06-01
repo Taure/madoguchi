@@ -51,7 +51,7 @@ initialize_over_http(Port) ->
         ~"jsonrpc" => ~"2.0", ~"id" => 1, ~"method" => ~"initialize", ~"params" => #{}
     }),
     ?assertEqual(200, Code),
-    ?assertMatch(#{~"result" := #{~"protocolVersion" := ~"2025-06-18"}}, json:decode(Body)).
+    ?assertMatch(#{~"result" := #{~"protocolVersion" := ~"2025-11-25"}}, json:decode(Body)).
 
 tools_call_over_http(Port) ->
     {Code, Body} = post(Port, #{

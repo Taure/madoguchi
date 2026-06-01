@@ -29,7 +29,15 @@ prompts_list_test() ->
     {reply, #{result := #{prompts := Prompts}}} =
         madoguchi:dispatch(req(~"prompts/list", #{}), server()),
     ?assertMatch(
-        [#{name := ~"greeting", description := _, arguments := [#{name := ~"who"}]}], Prompts
+        [
+            #{
+                name := ~"greeting",
+                description := _,
+                arguments := [#{name := ~"who"}],
+                icons := [#{src := ~"https://example.com/greet.png"}]
+            }
+        ],
+        Prompts
     ).
 
 prompts_list_empty_without_providers_test() ->

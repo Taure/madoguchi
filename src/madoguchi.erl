@@ -2,7 +2,8 @@
 -moduledoc """
 An MCP server framework for the BEAM. Define tools as modules implementing
 `m:madoguchi_tool`, collect them in a server definition, and serve them over the
-Model Context Protocol (Streamable HTTP, JSON-RPC 2.0, protocol `2025-06-18`).
+Model Context Protocol (Streamable HTTP or stdio, JSON-RPC 2.0, protocol
+`2025-11-25`, negotiating `2025-06-18` for older clients).
 
 ```erlang
 Server = #{name => ~"weather", version => ~"1.0.0", tools => [weather_tool]},
@@ -22,7 +23,9 @@ controller, or a test all call it with a decoded or raw JSON-RPC message.
     version := binary(),
     tools := [module()],
     resources => [module()],
-    prompts => [module()]
+    prompts => [module()],
+    title => binary(),
+    icons => [madoguchi_tool:icon()]
 }.
 
 -type http_opts() :: #{

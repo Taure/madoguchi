@@ -25,3 +25,4 @@ with a new one.
 | [0004](0004-resources.md) | Resources and resource templates |
 | [0005](0005-prompts.md) | Prompts |
 | [0006](0006-tool-enrichments.md) | Tool enrichments: annotations, structured output, rich content |
+| [0007](0007-protocol-2025-11-25.md) | Target protocol revision 2025-11-25 with version negotiation |

@@ -30,7 +30,12 @@ plain_tool_spec_omits_optional_fields_test() ->
     Spec = madoguchi_tool:to_spec(echo_tool),
     ?assertEqual(false, maps:is_key(annotations, Spec)),
     ?assertEqual(false, maps:is_key(outputSchema, Spec)),
+    ?assertEqual(false, maps:is_key(icons, Spec)),
     ?assertEqual(false, maps:is_key(title, Spec)).
+
+spec_includes_icons_test() ->
+    Spec = madoguchi_tool:to_spec(rich_tool),
+    ?assertMatch(#{icons := [#{src := ~"https://example.com/icon.png"}]}, Spec).
 
 %% --- structured output ---
 

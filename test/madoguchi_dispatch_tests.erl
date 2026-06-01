@@ -15,7 +15,7 @@ initialize_test() ->
         #{
             id := 1,
             result := #{
-                protocolVersion := ~"2025-06-18",
+                protocolVersion := ~"2025-11-25",
                 capabilities := #{tools := #{}},
                 serverInfo := #{name := ~"test", version := ~"1.0.0"}
             }
@@ -23,15 +23,42 @@ initialize_test() ->
         Resp
     ).
 
-initialize_negotiates_supported_version_test() ->
+initialize_negotiates_legacy_version_test() ->
     {reply, #{result := #{protocolVersion := V}}} =
         madoguchi:dispatch(req(~"initialize", #{~"protocolVersion" => ~"2025-06-18"}), server()),
     ?assertEqual(~"2025-06-18", V).
 
+initialize_negotiates_latest_version_test() ->
+    {reply, #{result := #{protocolVersion := V}}} =
+        madoguchi:dispatch(req(~"initialize", #{~"protocolVersion" => ~"2025-11-25"}), server()),
+    ?assertEqual(~"2025-11-25", V).
+
 initialize_falls_back_on_unknown_version_test() ->
     {reply, #{result := #{protocolVersion := V}}} =
         madoguchi:dispatch(req(~"initialize", #{~"protocolVersion" => ~"1999-01-01"}), server()),
-    ?assertEqual(~"2025-06-18", V).
+    ?assertEqual(~"2025-11-25", V).
+
+initialize_includes_server_title_and_icons_test() ->
+    Server = (server())#{
+        title => ~"Test Server",
+        icons => [#{src => ~"https://example.com/s.png"}]
+    },
+    {reply, #{result := #{serverInfo := Info}}} =
+        madoguchi:dispatch(req(~"initialize", #{}), Server),
+    ?assertMatch(
+        #{
+            name := ~"test",
+            title := ~"Test Server",
+            icons := [#{src := ~"https://example.com/s.png"}]
+        },
+        Info
+    ).
+
+initialize_serverinfo_omits_optional_fields_test() ->
+    {reply, #{result := #{serverInfo := Info}}} =
+        madoguchi:dispatch(req(~"initialize", #{}), server()),
+    ?assertEqual(false, maps:is_key(title, Info)),
+    ?assertEqual(false, maps:is_key(icons, Info)).
 
 %% --- ping ---
 
