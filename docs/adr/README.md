@@ -22,3 +22,4 @@ with a new one.
 | [0001](0001-mcp-server-core.md) | MCP server core |
 | [0002](0002-http-transport-security.md) | HTTP transport security and interop guards |
 | [0003](0003-stdio-transport.md) | stdio transport |
+| [0004](0004-resources.md) | Resources and resource templates |

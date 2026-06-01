@@ -76,7 +76,7 @@ tools_call_unknown_tool_test() ->
 %% --- errors and notifications ---
 
 unknown_method_test() ->
-    {reply, Resp} = madoguchi:dispatch(req(~"resources/list", #{}), server()),
+    {reply, Resp} = madoguchi:dispatch(req(~"completion/complete", #{}), server()),
     ?assertMatch(#{error := #{code := -32601}}, Resp).
 
 notification_is_noreply_test() ->

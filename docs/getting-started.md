@@ -100,6 +100,38 @@ plugin pipeline applies to your MCP endpoint like any other route. (A
 `madoguchi_nova` companion that packages this controller, a route helper, and
 plugin-based auth is on the roadmap.)
 
+## Resources
+
+Beyond tools, a server can expose readable context as *resources*. A resource
+provider is a module implementing `madoguchi_resource`:
+
+```erlang
+-module(doc_resources).
+-behaviour(madoguchi_resource).
+-export([list/0, templates/0, read/1]).
+
+list() ->
+    [#{uri => ~"mem://greeting", name => ~"greeting", mimeType => ~"text/plain"}].
+
+templates() ->
+    [#{uriTemplate => ~"mem://doc/{id}", name => ~"doc"}].
+
+read(~"mem://greeting") -> {ok, [madoguchi_resource:text(~"mem://greeting", ~"hello")]};
+read(_Uri) -> {error, not_found}.
+```
+
+List providers in the server definition under `resources`; the server then
+answers `resources/list`, `resources/templates/list`, and `resources/read`, and
+advertises the `resources` capability:
+
+```erlang
+Server = #{name => ~"calculator", version => ~"1.0.0",
+           tools => [add_tool], resources => [doc_resources]}.
+```
+
+`templates/0` is optional. `read/1` returns `{ok, [contents()]}`,
+`{error, not_found}`, or `{error, binary()}`; a crash is isolated to that read.
+
 ## Calling it
 
 Any MCP client speaks the same protocol. A raw `tools/call` over HTTP:

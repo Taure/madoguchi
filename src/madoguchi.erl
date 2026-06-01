@@ -20,7 +20,8 @@ controller, or a test all call it with a decoded or raw JSON-RPC message.
 -type server() :: #{
     name := binary(),
     version := binary(),
-    tools := [module()]
+    tools := [module()],
+    resources => [module()]
 }.
 
 -type http_opts() :: #{

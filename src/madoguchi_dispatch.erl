@@ -8,6 +8,8 @@ Implements the `2025-06-18` MCP methods needed for tools: `initialize`, `ping`,
 `tools/list`, `tools/call`, and the `notifications/initialized` notification.
 """.
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([handle/2, protocol_version/0, supported_versions/0]).
 
 -define(PROTOCOL, ~"2025-06-18").
@@ -38,7 +40,7 @@ reply_to(#{~"id" := Id}, _Server) ->
 request(~"initialize", Params, Id, Server) ->
     result(Id, #{
         protocolVersion => negotiate(Params),
-        capabilities => #{tools => #{}},
+        capabilities => capabilities(Server),
         serverInfo => #{name => maps:get(name, Server), version => maps:get(version, Server)}
     });
 request(~"ping", _Params, Id, _Server) ->
@@ -48,8 +50,39 @@ request(~"tools/list", _Params, Id, Server) ->
     result(Id, #{tools => Tools});
 request(~"tools/call", Params, Id, Server) ->
     tools_call(Params, Id, Server);
+request(~"resources/list", _Params, Id, Server) ->
+    Resources = madoguchi_resource:list(maps:get(resources, Server, [])),
+    result(Id, #{resources => Resources});
+request(~"resources/templates/list", _Params, Id, Server) ->
+    Templates = madoguchi_resource:templates(maps:get(resources, Server, [])),
+    result(Id, #{resourceTemplates => Templates});
+request(~"resources/read", Params, Id, Server) ->
+    resources_read(Params, Id, Server);
 request(_Method, _Params, Id, _Server) ->
     error_response(Id, -32601, ~"Method not found").
+
+capabilities(Server) ->
+    Base = #{tools => #{}},
+    case maps:get(resources, Server, []) of
+        [] -> Base;
+        _ -> Base#{resources => #{}}
+    end.
+
+resources_read(Params, Id, Server) ->
+    case maps:get(~"uri", Params, undefined) of
+        Uri when is_binary(Uri) ->
+            case madoguchi_resource:read(maps:get(resources, Server, []), Uri) of
+                {ok, Contents} ->
+                    result(Id, #{contents => Contents});
+                not_found ->
+                    error_response(Id, -32002, ~"Resource not found");
+                {error, Message} ->
+                    ?LOG_ERROR(#{event => mcp_resource_read_failed, uri => Uri, reason => Message}),
+                    error_response(Id, -32603, ~"Resource read failed")
+            end;
+        _ ->
+            error_response(Id, -32602, ~"Invalid params: uri is required")
+    end.
 
 tools_call(Params, Id, Server) ->
     Name = maps:get(~"name", Params, undefined),
