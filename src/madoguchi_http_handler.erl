@@ -46,21 +46,23 @@ unpack({Server, Opts}) when is_map(Server), is_map(Opts) -> {Server, Opts};
 unpack(Server) when is_map(Server) -> {Server, #{}}.
 
 guarded_post(Req0, Server, Opts) ->
-    Checks = [fun check_origin/3, fun check_accept/3, fun check_protocol_version/3],
-    case run_checks(Checks, Req0, Server, Opts) of
+    case run_checks(Req0, Opts) of
         ok -> handle_post(Req0, Server);
         {error, Code, Message} -> reject(Code, Message, Req0)
     end.
 
-run_checks([], _Req, _Server, _Opts) ->
-    ok;
-run_checks([Check | Rest], Req, Server, Opts) ->
-    case Check(Req, Server, Opts) of
-        ok -> run_checks(Rest, Req, Server, Opts);
-        {error, _Code, _Message} = Error -> Error
+run_checks(Req, Opts) ->
+    case check_origin(Req, Opts) of
+        ok ->
+            case check_accept(Req) of
+                ok -> check_protocol_version(Req);
+                Error -> Error
+            end;
+        Error ->
+            Error
     end.
 
-check_origin(Req, _Server, Opts) ->
+check_origin(Req, Opts) ->
     case cowboy_req:header(~"origin", Req) of
         undefined ->
             ok;
@@ -91,7 +93,7 @@ origin_host(Origin) ->
         _ -> error
     end.
 
-check_accept(Req, _Server, _Opts) ->
+check_accept(Req) ->
     case cowboy_req:header(~"accept", Req) of
         undefined ->
             ok;
@@ -108,7 +110,7 @@ accepts_json(Accept) ->
         binary:match(Lower, ~"*/*") =/= nomatch orelse
         binary:match(Lower, ~"application/*") =/= nomatch.
 
-check_protocol_version(Req, _Server, _Opts) ->
+check_protocol_version(Req) ->
     case cowboy_req:header(~"mcp-protocol-version", Req) of
         undefined ->
             ok;
