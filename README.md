@@ -77,7 +77,10 @@ call - it never takes down the server.
 ## Mounting
 
 - **Standalone:** `madoguchi:start_http/1,2` starts a Cowboy listener serving
-  the MCP endpoint.
+  the MCP endpoint. It binds `127.0.0.1` by default (set `ip => {0, 0, 0, 0}` to
+  expose it), validates the `Origin` header against `allowed_origins` (DNS-
+  rebinding protection), and enforces `Accept` / `MCP-Protocol-Version`. See
+  [SECURITY.md](SECURITY.md).
 - **Inside your app:** mount `madoguchi_http_handler` as a route on your own Cowboy
   listener, or call `madoguchi:dispatch/2` from a Nova controller / Plug. The
   [getting-started guide](docs/getting-started.md) shows the Nova pattern.

@@ -44,6 +44,12 @@ Server = #{name => ~"calculator", version => ~"1.0.0", tools => [add_tool]}.
 A Cowboy listener now answers MCP at `http://localhost:8080/mcp`. Point any MCP
 client at it - Claude Code, Cursor, or gakudan's client.
 
+The listener binds `127.0.0.1` by default so it is reachable only from the local
+machine; pass `ip => {0, 0, 0, 0}` to expose it on all interfaces. It also
+validates the `Origin` header (default `same_host`, configurable via
+`allowed_origins`) and enforces `Accept` and `MCP-Protocol-Version`. See
+[SECURITY.md](../SECURITY.md).
+
 ## Serving it, option 2: inside a Nova app
 
 madoguchi's core is transport-agnostic: `madoguchi:dispatch/2` is a pure

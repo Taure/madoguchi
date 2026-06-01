@@ -23,6 +23,16 @@ initialize_test() ->
         Resp
     ).
 
+initialize_negotiates_supported_version_test() ->
+    {reply, #{result := #{protocolVersion := V}}} =
+        madoguchi:dispatch(req(~"initialize", #{~"protocolVersion" => ~"2025-06-18"}), server()),
+    ?assertEqual(~"2025-06-18", V).
+
+initialize_falls_back_on_unknown_version_test() ->
+    {reply, #{result := #{protocolVersion := V}}} =
+        madoguchi:dispatch(req(~"initialize", #{~"protocolVersion" => ~"1999-01-01"}), server()),
+    ?assertEqual(~"2025-06-18", V).
+
 %% --- ping ---
 
 ping_test() ->

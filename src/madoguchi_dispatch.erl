@@ -8,13 +8,18 @@ Implements the `2025-06-18` MCP methods needed for tools: `initialize`, `ping`,
 `tools/list`, `tools/call`, and the `notifications/initialized` notification.
 """.
 
--export([handle/2, protocol_version/0]).
+-export([handle/2, protocol_version/0, supported_versions/0]).
 
 -define(PROTOCOL, ~"2025-06-18").
+-define(SUPPORTED, [~"2025-06-18"]).
 
--doc "The MCP protocol revision this server speaks.".
+-doc "The default (latest) MCP protocol revision this server speaks.".
 -spec protocol_version() -> binary().
 protocol_version() -> ?PROTOCOL.
+
+-doc "All MCP protocol revisions this server can negotiate, newest first.".
+-spec supported_versions() -> [binary()].
+supported_versions() -> ?SUPPORTED.
 
 -doc "Route one decoded JSON-RPC message against a server definition.".
 -spec handle(map(), madoguchi:server()) -> {reply, map()} | noreply.
@@ -69,10 +74,15 @@ find_tool(Name, Tools) when is_binary(Name) ->
 find_tool(_Name, _Tools) ->
     error.
 
-%% v0.1 supports one revision: echo it when the client requests it, otherwise
-%% advertise ours and let the client decide whether to proceed.
-negotiate(#{~"protocolVersion" := ?PROTOCOL}) -> ?PROTOCOL;
-negotiate(_Params) -> ?PROTOCOL.
+%% Echo the client's requested revision when we support it, otherwise advertise
+%% our latest and let the client decide whether to proceed.
+negotiate(#{~"protocolVersion" := Requested}) when is_binary(Requested) ->
+    case lists:member(Requested, ?SUPPORTED) of
+        true -> Requested;
+        false -> ?PROTOCOL
+    end;
+negotiate(_Params) ->
+    ?PROTOCOL.
 
 result(Id, Result) ->
     #{jsonrpc => ~"2.0", id => Id, result => Result}.

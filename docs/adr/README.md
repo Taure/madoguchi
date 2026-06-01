@@ -20,3 +20,4 @@ with a new one.
 | ADR | Title |
 | --- | --- |
 | [0001](0001-mcp-server-core.md) | MCP server core |
+| [0002](0002-http-transport-security.md) | HTTP transport security and interop guards |
