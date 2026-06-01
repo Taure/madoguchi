@@ -20,7 +20,7 @@ init(Req0, Server) ->
     Req =
         case cowboy_req:method(Req0) of
             ~"POST" -> handle_post(Req0, Server);
-            _ -> cowboy_req:reply(405, #{~"allow" => ~"POST"}, <<>>, Req0)
+            _ -> cowboy_req:reply(405, #{~"allow" => ~"POST"}, ~"", Req0)
         end,
     {ok, Req, Server}.
 
@@ -32,5 +32,5 @@ handle_post(Req0, Server) ->
                 200, #{~"content-type" => ~"application/json"}, json:encode(Response), Req1
             );
         noreply ->
-            cowboy_req:reply(202, #{}, <<>>, Req1)
+            cowboy_req:reply(202, #{}, ~"", Req1)
     end.
