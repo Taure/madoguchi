@@ -132,6 +132,39 @@ Server = #{name => ~"calculator", version => ~"1.0.0",
 `templates/0` is optional. `read/1` returns `{ok, [contents()]}`,
 `{error, not_found}`, or `{error, binary()}`; a crash is isolated to that read.
 
+## Prompts
+
+A server can also expose *prompts* - named, parameterised message templates a
+client surfaces as slash commands. A prompt is a module implementing
+`madoguchi_prompt`:
+
+```erlang
+-module(greeting_prompt).
+-behaviour(madoguchi_prompt).
+-export([name/0, description/0, arguments/0, get/1]).
+
+name() -> ~"greeting".
+description() -> ~"Greet someone by name.".
+
+arguments() ->
+    [#{name => ~"who", description => ~"Who to greet.", required => true}].
+
+get(#{~"who" := Who}) ->
+    {ok, [madoguchi_prompt:user(<<"Say hi to ", Who/binary>>)]}.
+```
+
+List prompts under `prompts`; the server answers `prompts/list` and
+`prompts/get` and advertises the `prompts` capability:
+
+```erlang
+Server = #{name => ~"calculator", version => ~"1.0.0",
+           tools => [add_tool], prompts => [greeting_prompt]}.
+```
+
+`arguments/0` is optional. `get/1` returns `{ok, [message()]}`,
+`{ok, Description, [message()]}`, or `{error, binary()}`; build messages with
+`madoguchi_prompt:user/1`, `assistant/1`, or `message/2`.
+
 ## Calling it
 
 Any MCP client speaks the same protocol. A raw `tools/call` over HTTP:

@@ -21,7 +21,8 @@ controller, or a test all call it with a decoded or raw JSON-RPC message.
     name := binary(),
     version := binary(),
     tools := [module()],
-    resources => [module()]
+    resources => [module()],
+    prompts => [module()]
 }.
 
 -type http_opts() :: #{

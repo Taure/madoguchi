@@ -58,14 +58,34 @@ request(~"resources/templates/list", _Params, Id, Server) ->
     result(Id, #{resourceTemplates => Templates});
 request(~"resources/read", Params, Id, Server) ->
     resources_read(Params, Id, Server);
+request(~"prompts/list", _Params, Id, Server) ->
+    Prompts = [madoguchi_prompt:to_spec(M) || M <- maps:get(prompts, Server, [])],
+    result(Id, #{prompts => Prompts});
+request(~"prompts/get", Params, Id, Server) ->
+    prompts_get(Params, Id, Server);
 request(_Method, _Params, Id, _Server) ->
     error_response(Id, -32601, ~"Method not found").
 
 capabilities(Server) ->
     Base = #{tools => #{}},
-    case maps:get(resources, Server, []) of
-        [] -> Base;
-        _ -> Base#{resources => #{}}
+    WithResources = maybe_cap(resources, Server, Base),
+    maybe_cap(prompts, Server, WithResources).
+
+maybe_cap(Key, Server, Caps) ->
+    case maps:get(Key, Server, []) of
+        [] -> Caps;
+        _ -> Caps#{Key => #{}}
+    end.
+
+prompts_get(Params, Id, Server) ->
+    case madoguchi_prompt:get(maps:get(prompts, Server, []), Params) of
+        {ok, Result} ->
+            result(Id, Result);
+        not_found ->
+            error_response(Id, -32602, ~"Unknown prompt");
+        {error, Message} ->
+            ?LOG_ERROR(#{event => mcp_prompt_get_failed, reason => Message}),
+            error_response(Id, -32603, ~"Prompt rendering failed")
     end.
 
 resources_read(Params, Id, Server) ->

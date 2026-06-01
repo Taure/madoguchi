@@ -23,3 +23,4 @@ with a new one.
 | [0002](0002-http-transport-security.md) | HTTP transport security and interop guards |
 | [0003](0003-stdio-transport.md) | stdio transport |
 | [0004](0004-resources.md) | Resources and resource templates |
+| [0005](0005-prompts.md) | Prompts |
