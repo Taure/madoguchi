@@ -24,3 +24,4 @@ with a new one.
 | [0003](0003-stdio-transport.md) | stdio transport |
 | [0004](0004-resources.md) | Resources and resource templates |
 | [0005](0005-prompts.md) | Prompts |
+| [0006](0006-tool-enrichments.md) | Tool enrichments: annotations, structured output, rich content |

@@ -25,9 +25,15 @@ call(#{~"a" := A, ~"b" := B}) ->
     {ok, integer_to_binary(A + B)}.
 ```
 
-`call/1` may return `{ok, binary()}` (one text block), `{ok, [content()]}`, or
-`{error, binary()}`. An error or a crash becomes an MCP tool error on that call;
-the server stays up.
+`call/1` may return `{ok, binary()}` (one text block), `{ok, [content()]}`,
+`{ok, [content()], map()}` (structured output), or `{error, binary()}`. An error
+or a crash becomes an MCP tool error on that call; the server stays up.
+
+A tool can also implement optional `title/0`, `annotations/0` (read-only /
+destructive / idempotent / open-world hints), and `output_schema/0`. Content is
+not limited to text - build image, audio, resource-link, and embedded-resource
+blocks with `madoguchi_tool:image/2`, `audio/2`, `resource_link/2`, and
+`embedded/1`.
 
 ## A server definition
 

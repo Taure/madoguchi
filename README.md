@@ -68,11 +68,17 @@ A tool is a module implementing four callbacks:
 | `name/0` | the tool name (binary) |
 | `description/0` | a human description (binary) |
 | `input_schema/0` | a JSON Schema object (map) |
-| `call/1` | `{ok, binary()}`, `{ok, [content()]}`, or `{error, binary()}` |
+| `call/1` | `{ok, binary()}`, `{ok, [content()]}`, `{ok, [content()], map()}`, or `{error, binary()}` |
 
-`content()` is `#{type => text, text => binary()}`. A `call/1` that returns
-`{error, _}` or crashes becomes an MCP tool error (`isError => true`) on that
-call - it never takes down the server.
+A `call/1` that returns `{error, _}` or crashes becomes an MCP tool error
+(`isError => true`) on that call - it never takes down the server.
+
+Tools may also declare optional `title/0`, `annotations/0` (read-only /
+destructive / idempotent / open-world hints), and `output_schema/0`; with an
+output schema a tool can return `{ok, Content, Structured}` and the result
+carries `structuredContent`. Content is not limited to text - build blocks with
+`madoguchi_tool:text/1`, `image/2`, `audio/2`, `resource_link/2`, and
+`embedded/1`.
 
 ## Mounting
 

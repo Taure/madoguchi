@@ -112,11 +112,15 @@ tools_call(Params, Id, Server) ->
             case madoguchi_tool:invoke(Mod, Arguments) of
                 {ok, Content} ->
                     result(Id, #{content => Content, isError => false});
+                {ok, Content, Structured} ->
+                    result(Id, #{
+                        content => Content, structuredContent => Structured, isError => false
+                    });
                 {error, Message} ->
                     result(Id, #{content => [madoguchi_tool:text(Message)], isError => true})
             end;
         error ->
-            error_response(Id, -32602, iolist_to_binary([~"Unknown tool: ", to_bin(Name)]))
+            error_response(Id, -32602, ~"Unknown tool")
     end.
 
 find_tool(Name, Tools) when is_binary(Name) ->
@@ -142,7 +146,3 @@ result(Id, Result) ->
 
 error_response(Id, Code, Message) ->
     #{jsonrpc => ~"2.0", id => Id, error => #{code => Code, message => Message}}.
-
-to_bin(B) when is_binary(B) -> B;
-to_bin(undefined) -> ~"(none)";
-to_bin(Other) -> iolist_to_binary(io_lib:format("~tp", [Other])).
