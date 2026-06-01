@@ -25,9 +25,19 @@ call(#{~"a" := A, ~"b" := B}) ->
     {ok, integer_to_binary(A + B)}.
 ```
 
-`call/1` may return `{ok, binary()}` (one text block), `{ok, [content()]}`, or
-`{error, binary()}`. An error or a crash becomes an MCP tool error on that call;
-the server stays up.
+`call/1` may return `{ok, binary()}` (one text block), `{ok, [content()]}`,
+`{ok, [content()], map()}` (structured output), or `{error, binary()}`. An error
+or a crash becomes an MCP tool error on that call; the server stays up.
+
+A tool can also implement optional `title/0`, `annotations/0` (read-only /
+destructive / idempotent / open-world hints), `output_schema/0`, and `icons/0`.
+Content is not limited to text - build image, audio, resource-link, and
+embedded-resource blocks with `madoguchi_tool:image/2`, `audio/2`,
+`resource_link/2`, and `embedded/1`.
+
+`input_schema/0` and `output_schema/0` are JSON Schema objects; the targeted
+protocol revision (`2025-11-25`) assumes the JSON Schema 2020-12 dialect. The
+server negotiates `2025-06-18` automatically for older clients.
 
 ## A server definition
 
@@ -44,7 +54,29 @@ Server = #{name => ~"calculator", version => ~"1.0.0", tools => [add_tool]}.
 A Cowboy listener now answers MCP at `http://localhost:8080/mcp`. Point any MCP
 client at it - Claude Code, Cursor, or gakudan's client.
 
-## Serving it, option 2: inside a Nova app
+The listener binds `127.0.0.1` by default so it is reachable only from the local
+machine; pass `ip => {0, 0, 0, 0}` to expose it on all interfaces. It also
+validates the `Origin` header (default `same_host`, configurable via
+`allowed_origins`) and enforces `Accept` and `MCP-Protocol-Version`. See
+[SECURITY.md](../SECURITY.md).
+
+## Serving it, option 2: stdio (local launch)
+
+Most local MCP servers are launched as a subprocess and speak newline-delimited
+JSON-RPC over stdin/stdout. Run that loop with `madoguchi_stdio:start/1`:
+
+```erlang
+%% server entry point (e.g. an escript main/1)
+main(_) ->
+    Server = #{name => ~"calculator", version => ~"1.0.0", tools => [add_tool]},
+    madoguchi_stdio:start(Server).
+```
+
+Point a client's `command` at that escript. One JSON-RPC document per line in,
+one response line out per request; notifications produce no output. Keep stdout
+clean - it carries only MCP messages, so send any logging to stderr.
+
+## Serving it, option 3: inside a Nova app
 
 madoguchi's core is transport-agnostic: `madoguchi:dispatch/2` is a pure
 function. In a Nova app you call it from a small controller - no Cowboy handler,
@@ -77,6 +109,71 @@ Put that route in a `security => fun ...:check/1` group and Nova's auth +
 plugin pipeline applies to your MCP endpoint like any other route. (A
 `madoguchi_nova` companion that packages this controller, a route helper, and
 plugin-based auth is on the roadmap.)
+
+## Resources
+
+Beyond tools, a server can expose readable context as *resources*. A resource
+provider is a module implementing `madoguchi_resource`:
+
+```erlang
+-module(doc_resources).
+-behaviour(madoguchi_resource).
+-export([list/0, templates/0, read/1]).
+
+list() ->
+    [#{uri => ~"mem://greeting", name => ~"greeting", mimeType => ~"text/plain"}].
+
+templates() ->
+    [#{uriTemplate => ~"mem://doc/{id}", name => ~"doc"}].
+
+read(~"mem://greeting") -> {ok, [madoguchi_resource:text(~"mem://greeting", ~"hello")]};
+read(_Uri) -> {error, not_found}.
+```
+
+List providers in the server definition under `resources`; the server then
+answers `resources/list`, `resources/templates/list`, and `resources/read`, and
+advertises the `resources` capability:
+
+```erlang
+Server = #{name => ~"calculator", version => ~"1.0.0",
+           tools => [add_tool], resources => [doc_resources]}.
+```
+
+`templates/0` is optional. `read/1` returns `{ok, [contents()]}`,
+`{error, not_found}`, or `{error, binary()}`; a crash is isolated to that read.
+
+## Prompts
+
+A server can also expose *prompts* - named, parameterised message templates a
+client surfaces as slash commands. A prompt is a module implementing
+`madoguchi_prompt`:
+
+```erlang
+-module(greeting_prompt).
+-behaviour(madoguchi_prompt).
+-export([name/0, description/0, arguments/0, get/1]).
+
+name() -> ~"greeting".
+description() -> ~"Greet someone by name.".
+
+arguments() ->
+    [#{name => ~"who", description => ~"Who to greet.", required => true}].
+
+get(#{~"who" := Who}) ->
+    {ok, [madoguchi_prompt:user(<<"Say hi to ", Who/binary>>)]}.
+```
+
+List prompts under `prompts`; the server answers `prompts/list` and
+`prompts/get` and advertises the `prompts` capability:
+
+```erlang
+Server = #{name => ~"calculator", version => ~"1.0.0",
+           tools => [add_tool], prompts => [greeting_prompt]}.
+```
+
+`arguments/0` is optional. `get/1` returns `{ok, [message()]}`,
+`{ok, Description, [message()]}`, or `{error, binary()}`; build messages with
+`madoguchi_prompt:user/1`, `assistant/1`, or `message/2`.
 
 ## Calling it
 

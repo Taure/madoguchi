@@ -2,7 +2,8 @@
 -moduledoc """
 An MCP server framework for the BEAM. Define tools as modules implementing
 `m:madoguchi_tool`, collect them in a server definition, and serve them over the
-Model Context Protocol (Streamable HTTP, JSON-RPC 2.0, protocol `2025-06-18`).
+Model Context Protocol (Streamable HTTP or stdio, JSON-RPC 2.0, protocol
+`2025-11-25`, negotiating `2025-06-18` for older clients).
 
 ```erlang
 Server = #{name => ~"weather", version => ~"1.0.0", tools => [weather_tool]},
@@ -20,13 +21,19 @@ controller, or a test all call it with a decoded or raw JSON-RPC message.
 -type server() :: #{
     name := binary(),
     version := binary(),
-    tools := [module()]
+    tools := [module()],
+    resources => [module()],
+    prompts => [module()],
+    title => binary(),
+    icons => [madoguchi_tool:icon()]
 }.
 
 -type http_opts() :: #{
     port => inet:port_number(),
+    ip => inet:ip_address(),
     path => iodata(),
-    ref => ranch:ref()
+    ref => ranch:ref(),
+    allowed_origins => same_host | any | [binary()]
 }.
 
 -doc """
@@ -51,16 +58,25 @@ start_http(Server) ->
     start_http(Server, #{}).
 
 -doc """
-Start a Cowboy listener serving the MCP endpoint. Options: `port` (default
-8080), `path` (default `"/mcp"`), `ref` (listener name, default `madoguchi_http`).
+Start a Cowboy listener serving the MCP endpoint. Options:
+
+- `port` (default `8080`)
+- `ip` (default `{127, 0, 0, 1}`) - the bind address. Defaults to loopback so a
+  local MCP server is not exposed on every interface; set `{0, 0, 0, 0}` to bind
+  all interfaces.
+- `path` (default `"/mcp"`)
+- `ref` (listener name, default `madoguchi_http`)
+- `allowed_origins` (default `same_host`) - DNS-rebinding protection for the
+  `Origin` header; `same_host`, `any`, or an explicit list of allowed origins.
 """.
 -spec start_http(server(), http_opts()) -> {ok, pid()} | {error, term()}.
 start_http(Server, Opts) ->
     Port = maps:get(port, Opts, 8080),
+    Ip = maps:get(ip, Opts, {127, 0, 0, 1}),
     Path = maps:get(path, Opts, "/mcp"),
     Ref = maps:get(ref, Opts, madoguchi_http),
-    Dispatch = cowboy_router:compile([{'_', [{Path, madoguchi_http_handler, Server}]}]),
-    cowboy:start_clear(Ref, [{port, Port}], #{env => #{dispatch => Dispatch}}).
+    Dispatch = cowboy_router:compile([{'_', [{Path, madoguchi_http_handler, {Server, Opts}}]}]),
+    cowboy:start_clear(Ref, [{port, Port}, {ip, Ip}], #{env => #{dispatch => Dispatch}}).
 
 -doc "Stop a listener started by `start_http/1,2`.".
 -spec stop_http(ranch:ref()) -> ok | {error, not_found}.

@@ -8,9 +8,10 @@
 
 madoguchi turns any BEAM service into a [Model Context Protocol](https://modelcontextprotocol.io)
 server, so agents - Claude Code, Cursor, or a [gakudan](https://github.com/Taure/gakudan)
-agent - can call your tools over the wire. It speaks the Streamable HTTP
-transport, JSON-RPC 2.0, protocol version `2025-06-18` (the same revision
-gakudan's MCP client speaks, so the two interoperate end to end).
+agent - can call your tools over the wire. It serves the Streamable HTTP and
+stdio transports, JSON-RPC 2.0, protocol version `2025-11-25` and negotiates
+`2025-06-18` for older clients (the revision gakudan's MCP client speaks, so the
+two interoperate end to end).
 
 The protocol core is transport-agnostic: `madoguchi:dispatch/2` is a pure
 function from a JSON-RPC message to a response, with no web dependency. A
@@ -68,26 +69,37 @@ A tool is a module implementing four callbacks:
 | `name/0` | the tool name (binary) |
 | `description/0` | a human description (binary) |
 | `input_schema/0` | a JSON Schema object (map) |
-| `call/1` | `{ok, binary()}`, `{ok, [content()]}`, or `{error, binary()}` |
+| `call/1` | `{ok, binary()}`, `{ok, [content()]}`, `{ok, [content()], map()}`, or `{error, binary()}` |
 
-`content()` is `#{type => text, text => binary()}`. A `call/1` that returns
-`{error, _}` or crashes becomes an MCP tool error (`isError => true`) on that
-call - it never takes down the server.
+A `call/1` that returns `{error, _}` or crashes becomes an MCP tool error
+(`isError => true`) on that call - it never takes down the server.
+
+Tools may also declare optional `title/0`, `annotations/0` (read-only /
+destructive / idempotent / open-world hints), and `output_schema/0`; with an
+output schema a tool can return `{ok, Content, Structured}` and the result
+carries `structuredContent`. Content is not limited to text - build blocks with
+`madoguchi_tool:text/1`, `image/2`, `audio/2`, `resource_link/2`, and
+`embedded/1`.
 
 ## Mounting
 
 - **Standalone:** `madoguchi:start_http/1,2` starts a Cowboy listener serving
-  the MCP endpoint.
+  the MCP endpoint. It binds `127.0.0.1` by default (set `ip => {0, 0, 0, 0}` to
+  expose it), validates the `Origin` header against `allowed_origins` (DNS-
+  rebinding protection), and enforces `Accept` / `MCP-Protocol-Version`. See
+  [SECURITY.md](SECURITY.md).
+- **stdio (local launch):** `madoguchi_stdio:start/1` runs a newline-delimited
+  JSON-RPC loop over stdin/stdout - the transport a client uses when it launches
+  the server as a subprocess.
 - **Inside your app:** mount `madoguchi_http_handler` as a route on your own Cowboy
   listener, or call `madoguchi:dispatch/2` from a Nova controller / Plug. The
   [getting-started guide](docs/getting-started.md) shows the Nova pattern.
 
 ## Roadmap
 
-Deferred from this core, in rough order: resources and prompts capabilities; the
-stdio transport (for Claude-Code-launched local servers); a `madoguchi_nova`
-bridge (config-driven controller + plugin-based auth); and input-schema
-validation.
+Deferred from this core: a `madoguchi_nova` bridge (config-driven controller +
+plugin-based auth); a token-verification seam for authorization; and
+input-schema validation.
 
 ## License
 

@@ -20,3 +20,9 @@ with a new one.
 | ADR | Title |
 | --- | --- |
 | [0001](0001-mcp-server-core.md) | MCP server core |
+| [0002](0002-http-transport-security.md) | HTTP transport security and interop guards |
+| [0003](0003-stdio-transport.md) | stdio transport |
+| [0004](0004-resources.md) | Resources and resource templates |
+| [0005](0005-prompts.md) | Prompts |
+| [0006](0006-tool-enrichments.md) | Tool enrichments: annotations, structured output, rich content |
+| [0007](0007-protocol-2025-11-25.md) | Target protocol revision 2025-11-25 with version negotiation |
