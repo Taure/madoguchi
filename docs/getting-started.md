@@ -50,7 +50,23 @@ validates the `Origin` header (default `same_host`, configurable via
 `allowed_origins`) and enforces `Accept` and `MCP-Protocol-Version`. See
 [SECURITY.md](../SECURITY.md).
 
-## Serving it, option 2: inside a Nova app
+## Serving it, option 2: stdio (local launch)
+
+Most local MCP servers are launched as a subprocess and speak newline-delimited
+JSON-RPC over stdin/stdout. Run that loop with `madoguchi_stdio:start/1`:
+
+```erlang
+%% server entry point (e.g. an escript main/1)
+main(_) ->
+    Server = #{name => ~"calculator", version => ~"1.0.0", tools => [add_tool]},
+    madoguchi_stdio:start(Server).
+```
+
+Point a client's `command` at that escript. One JSON-RPC document per line in,
+one response line out per request; notifications produce no output. Keep stdout
+clean - it carries only MCP messages, so send any logging to stderr.
+
+## Serving it, option 3: inside a Nova app
 
 madoguchi's core is transport-agnostic: `madoguchi:dispatch/2` is a pure
 function. In a Nova app you call it from a small controller - no Cowboy handler,
